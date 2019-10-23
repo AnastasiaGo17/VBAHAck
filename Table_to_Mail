@@ -1,0 +1,86 @@
+
+Sub Table_Mail_from_List()
+    Dim OutApp As Object
+    Dim OutMail As Object
+    Dim selcell As String
+    Dim inner_cell As Range
+    Dim lastRow As Long
+    Dim SigString As String
+    Dim Signature As String
+    
+    'To add a saved signature, just put its name instead of <Your Signature> and add an .htm extension to it. Example: mysign.htm
+    
+    SigString = Environ("appdata") & _
+                "\Microsoft\Signatures\<Your Signature>.htm"
+    Signature = GetBoiler(SigString)
+
+    Application.ScreenUpdating = False
+    Set OutApp = CreateObject("Outlook.Application")
+    
+   
+    lastRow = Cells(Rows.Count, "A").End(xlUp).Row
+    Dim i As Integer
+    ' if your table does not have a header, set i to 1
+    i = 2
+    Do While i < lastRow
+        
+        
+        'Substitute A with another letter if the list of your emails is in different column
+        
+        selcell = "A" & i
+        Dim mail_range As Range
+        Dim selected_cell_val As String
+        selected_cell_val = Range(selcell).Value
+        
+        For Each inner_cell In Range(selcell, Columns("A").Cells.End(xlDown))
+            Dim inner_cell_val As String
+            inner_cell_val = inner_cell.Value
+            If inner_cell_val = selected_cell_val Then
+                If mail_range Is Nothing Then
+                
+                'Customize the cells selected for a table here. Use Range(Cells(inner_cell.Row, " <Start Column Letter Here>"), Cells(inner_cell.Row, "<Finish Column letter Here>")
+                'to designate the span of several columns, and Cells(inner_cell.Row, "<Your Column Letter Here>") to select a single column.
+                'Unite your selections through Application.Union and use Union() to append new rows to them.
+                
+                    Set mail_range = Application.Union(Range(Cells(inner_cell.Row, "<Start Column Letter Here>"), Cells(inner_cell.Row, "<Finish Column letter Here>")), Range(Cells(inner_cell.Row, "<Start Column Letter Here>"), Cells(inner_cell.Row, "<Finish Column letter Here>")), Cells(inner_cell.Row, "<Your Column Letter Here>"))
+                Else
+                    Set mail_range = Union(mail_range, Application.Union(Range(Cells(inner_cell.Row, "<Start Column Letter Here>"), Cells(inner_cell.Row, "<Finish Column letter Here>")), Range(Cells(inner_cell.Row, "<Start Column Letter Here>"), Cells(inner_cell.Row, "<Finish Column letter Here>")), Cells(inner_cell.Row, "<Your Column Letter Here>")))
+        
+                End If
+            End If
+            Next inner_cell
+        
+        Set OutMail = OutApp.CreateItem(0)
+            
+            
+            
+
+            With OutMail
+            
+                .To = selected_cell_val
+                .Subject = "LSE Remittance Information"
+                
+                ' Go to the RangetoHTML function module to customize the message contents
+                
+                .HTMLBody = RangetoHTML(mail_range) & "<br/> <br/> <br/> " & Signature
+                
+                ' Optionally, choose an address to send a message on behalf of the other inbox.
+                
+                .SentOnBehalfOfName = "<Your organization postbox here>"
+                .Send
+                
+            End With
+            
+        Set OutMail = Nothing
+        
+        
+        i = i + mail_range.Rows.Count
+        Set mail_range = Nothing
+    Loop
+            
+            
+            
+        
+        
+    
+End Sub
