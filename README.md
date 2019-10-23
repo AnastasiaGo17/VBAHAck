@@ -12,4 +12,4 @@ VBA Hack for many-to-one letter mailmerge
 
 5. The macro runs up until the first empty string. Do make sure your entries "stick together".
 
-
+6. Create 3 separate modules in one project for all three parts of the solution, or just copy and paste into one module
